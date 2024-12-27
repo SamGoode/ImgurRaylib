@@ -3,8 +3,6 @@
 #include <string>
 
 
-
-
 class HuffmanTable {
 private:
     int length;

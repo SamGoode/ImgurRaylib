@@ -142,12 +142,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="HuffmanTable.cpp" />
+    <ClCompile Include="HuffmanTree.cpp" />
     <ClCompile Include="ImgurRequest.cpp" />
+    <ClCompile Include="JPEG.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="QuantTable.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HuffmanTable.h" />
+    <ClInclude Include="HuffmanTree.h" />
     <ClInclude Include="ImgurRequest.h" />
+    <ClInclude Include="JPEG.h" />
+    <ClInclude Include="QuantTable.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
