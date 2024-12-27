@@ -5,11 +5,15 @@
 
 int getBytesAsInt(const std::string& data, int index, int bytes);
 
-struct Component {
+struct QTComponent {
     int ID;
     int samplingY;
     int samplingX;
     int quantID;
+};
+
+struct HTComponent {
+
 };
 
 class JPEG {
@@ -46,7 +50,9 @@ private:
     int imageHeight;
     int imageWidth;
     int componentCount;
-    Component components[3];
+    QTComponent components[3];
+
+    std::string ECS;
 
 public:
     JPEG() {}
@@ -55,5 +61,9 @@ public:
     void printHeaders();
 
     void getDataSOF(const std::string& data);
-    void printImageData();
+    void printImageInfo();
+
+    void parseImageData(const std::string& data, int startIndex);
+
+    void decode(const std::string& data);
 };

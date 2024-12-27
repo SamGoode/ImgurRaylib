@@ -182,7 +182,7 @@ void JPEG::getDataSOF(const std::string& data) {
     }
 }
 
-void JPEG::printImageData() {
+void JPEG::printImageInfo() {
     std::cout << "Image Height: " << imageHeight << std::endl;
     std::cout << "Image Width: " << imageWidth << std::endl;
 
@@ -194,3 +194,78 @@ void JPEG::printImageData() {
         std::cout << std::endl;
     }
 }
+
+void JPEG::parseImageData(const std::string& data, int startIndex) {
+    ECS = "";
+
+    int index = startIndex;
+    int latestIndex = startIndex;
+
+    int FF00bytes = 0;
+    while (index < data.length()) {
+        int bytePair = getBytesAsInt(data, index, 2);
+
+        if (bytePair == 0xFF00) {
+            std::cout << std::hex << bytePair << std::dec;
+            std::cout << " byte found at byte index: " << index - startIndex << std::endl;
+
+            FF00bytes++;
+            ECS.append(&data[latestIndex], &data[index]);
+
+            index += 2;
+            latestIndex = index;
+            continue;
+        }
+
+        if (bytePair == 0xFFD9) {
+            std::cout << std::hex << bytePair << std::dec;
+            std::cout << " byte found at byte index: " << index - startIndex << std::endl;
+
+            ECS.append(&data[latestIndex], &data[index]);
+            break;
+        }
+
+        index++;
+    }
+
+    std::cout << "FF00 bytes found: " << FF00bytes << std::endl;
+}
+
+void JPEG::decode(const std::string& data) {
+    int index;
+    for (int i = 0; i < headerCount; i++) {
+        if (headers[i] == SOS) {
+            index = headerPositions[i];
+            break;
+        }
+    }
+
+    int marker = getBytesAsInt(data, index, 2);
+    if (marker != 0xFFDA) {
+        std::cout << "Error: Incorrect marker." << std::endl;
+        return;
+    }
+    index += 2;
+
+    int length = getBytesAsInt(data, index, 2);
+    index += length;
+    int startIndex = index;
+
+    parseImageData(data, index);
+
+    //std::cout << "FF00 bytes found: " << FF00bytes << std::endl;
+    std::cout << data.length() - startIndex << std::endl;
+    std::cout << ECS.length() << std::endl;
+    
+
+    for (int i = 0; i < ECS.length(); i++) {
+        int bytePair = getBytesAsInt(ECS, i, 2);
+
+        if ((bytePair & 0xFF00) == 0xFF00) {
+            std::cout << std::hex << bytePair << std::dec;
+            std::cout << " byte found at byte index: " << i << std::endl;
+        }
+    }
+}
+
+

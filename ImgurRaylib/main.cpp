@@ -36,7 +36,9 @@ int main() {
     std::cout << std::endl;
 
     jpeg.getDataSOF(data);
-    jpeg.printImageData();
+    jpeg.printImageInfo();
+
+    jpeg.decode(data);
 
     // QT at 616
     //std::cout << "Quantization table located at byte index: 616" << std::endl;
