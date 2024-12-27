@@ -210,7 +210,7 @@ void JPEG::parseImageData(const std::string& data, int startIndex) {
             std::cout << " byte found at byte index: " << index - startIndex << std::endl;
 
             FF00bytes++;
-            ECS.append(&data[latestIndex], &data[index]);
+            ECS.append(&data[latestIndex], &data[index + 1]);
 
             index += 2;
             latestIndex = index;
@@ -227,6 +227,8 @@ void JPEG::parseImageData(const std::string& data, int startIndex) {
 
         index++;
     }
+    
+    std::cout << std::hex << (int)(unsigned char)ECS[ECS.length() - 1] << std::dec << std::endl;
 
     std::cout << "FF00 bytes found: " << FF00bytes << std::endl;
 }
