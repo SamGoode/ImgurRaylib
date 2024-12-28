@@ -50,4 +50,6 @@ public:
     }
 
     unsigned char getElement(std::string bits);
+
+    unsigned char getCodeFromStream(class BitStream& stream);
 };

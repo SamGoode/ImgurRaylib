@@ -149,6 +149,7 @@
     <ClCompile Include="QuantTable.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BitStream.h" />
     <ClInclude Include="HuffmanTable.h" />
     <ClInclude Include="HuffmanTree.h" />
     <ClInclude Include="ImgurRequest.h" />

@@ -7,8 +7,7 @@ int getBytesAsInt(const std::string& data, int index, int bytes);
 
 struct QTComponent {
     int ID;
-    int samplingY;
-    int samplingX;
+    int sampFactor;
     int quantID;
 };
 
@@ -65,5 +64,11 @@ public:
 
     void parseImageData(const std::string& data, int startIndex);
 
-    void decode(const std::string& data);
+    int decodeRLC(int size, int bits);
+
+    void inverseDCT(int DCT[64], int output[64]);
+
+    void buildMCU(class BitStream& stream, class QuantTable& qTable, class HuffmanTree& hTreeDC, class HuffmanTree& hTreeAC, int& lastDcCoeff, int output[64]);
+
+    void decode(const std::string& data, int* output);
 };

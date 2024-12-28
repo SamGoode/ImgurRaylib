@@ -50,5 +50,8 @@
     <ClInclude Include="QuantTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BitStream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

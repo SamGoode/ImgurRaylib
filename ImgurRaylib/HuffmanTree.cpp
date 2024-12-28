@@ -3,6 +3,8 @@
 #include <iostream>
 
 #include "HuffmanTable.h"
+#include "BitStream.h"
+
 
 HuffmanTree::HuffmanTree(const HuffmanTable& hTable) {
     const unsigned char* bitLengths = hTable.getBitLengths();
@@ -108,4 +110,29 @@ unsigned char HuffmanTree::getElement(std::string bits) {
 
     std::cout << "Error: Invalid bitstream." << std::endl;
     return 0;
+}
+
+unsigned char HuffmanTree::getCodeFromStream(BitStream& stream) {
+    Node* currentNode = rootNode;
+
+    while (true) {
+        LeafNode* elementNode = dynamic_cast<LeafNode*>(currentNode);
+        if (elementNode) {
+            return elementNode->value;
+        }
+
+        BranchNode* branch = dynamic_cast<BranchNode*>(currentNode);
+        if (!branch) {
+            std::cout << "Error: Invalid node." << std::endl;
+            return 0;
+        }
+
+        bool bit = stream.getBit();
+        if (!bit) {
+            currentNode = branch->firstChild;
+        }
+        else {
+            currentNode = branch->secondChild;
+        }
+    }
 }

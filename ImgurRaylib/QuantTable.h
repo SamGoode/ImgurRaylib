@@ -8,10 +8,11 @@ private:
     int destination;
     int tableID;
 
+public:
     unsigned char table[64];
 
 public:
     QuantTable(const std::string& data, int startIndex);
 
-    void print();
+    void print();    
 };

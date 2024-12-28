@@ -17,10 +17,6 @@ QuantTable::QuantTable(const std::string& data, int startIndex) {
 
     std::copy(&data[index], &data[index + 64], table);
     index += 64;
-
-    // 
-    // order yx
-    // 00, 01, 10, 20, 11, 02, 03, 12, 21, 30
 }
 
 void QuantTable::print() {

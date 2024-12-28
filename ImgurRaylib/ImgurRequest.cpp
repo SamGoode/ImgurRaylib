@@ -1,6 +1,7 @@
 #include "ImgurRequest.h"
 
 #include <iostream>
+#include <Windows.h>
 #include <wininet.h>
 
 #pragma comment(lib, "wininet.lib")
@@ -46,6 +47,8 @@ void ImgurRequest::GetImageData(std::string& data) {
         InternetCloseHandle(handle);
         return;
     }
+
+    LPCSTR acceptTypes[2] = { "image/jpeg", NULL };
 
     // Send HTTP GET request.
     HINTERNET request = HttpOpenRequest(connection, "GET", path.c_str(), NULL, NULL, acceptTypes, 0, NULL);
