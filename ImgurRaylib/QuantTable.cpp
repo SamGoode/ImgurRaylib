@@ -4,6 +4,7 @@
 
 #include "JPEG.h"
 
+
 QuantTable::QuantTable(const std::string& data, int startIndex) {
     int index = startIndex;
 
@@ -17,6 +18,28 @@ QuantTable::QuantTable(const std::string& data, int startIndex) {
 
     std::copy(&data[index], &data[index + 64], table);
     index += 64;
+}
+
+QuantTable::QuantTable(const QuantTable& other) {
+    length = other.length;
+    destination = other.destination;
+    tableID = other.tableID;
+
+    for (int i = 0; i < 64; i++) {
+        table[i] = other.table[i];
+    }
+}
+
+QuantTable& QuantTable::operator=(const QuantTable& other) {
+    length = other.length;
+    destination = other.destination;
+    tableID = other.tableID;
+
+    for (int i = 0; i < 64; i++) {
+        table[i] = other.table[i];
+    }
+
+    return *this;
 }
 
 void QuantTable::print() {

@@ -6,10 +6,6 @@
 #include <fstream>
 
 #include "ImgurRequest.h"
-#include "QuantTable.h"
-#include "HuffmanTable.h"
-#include "HuffmanTree.h"
-
 #include "JPEG.h"
 
 Color convertIntToColor(int rgba) {
@@ -23,6 +19,7 @@ Color convertIntToColor(int rgba) {
 
 int main() {
     std::string path = "nUTJtzV.jpeg";
+    path = "bV8hSec.jpeg";
 
     ImgurRequest request(path);
 
@@ -43,33 +40,11 @@ int main() {
     jpeg.getDataSOF(data);
     jpeg.printImageInfo();
 
-    int* imageData = new int[4032 * 3024];
+    int imgHeight = jpeg.getImageHeight();
+    int imgWidth = jpeg.getImageWidth();
+
+    int* imageData = new int[imgHeight * imgWidth];
     jpeg.decode(data, imageData);
-
-    // QT at 616
-    //std::cout << "Quantization table located at byte index: 616" << std::endl;
-    //QuantTable qTable = QuantTable(data, 618);
-    //qTable.print();
-
-    // HT at 773
-    //std::cout << "Huffman table located at byte index: 773" << std::endl;
-    //HuffmanTable hTable = HuffmanTable(data, 775);
-    //hTable.print();
-
-    //HuffmanTree hTree = HuffmanTree(hTable);
-    //int element = (int)hTree.getElement("10");
-    //std::cout << element << std::endl;
-
-
-
-
-    //Color test = convertIntToColor(imageData[0]);
-    //int col = imageData[0];
-
-    //std::cout << ((col >> 0) & 0xFF) << std::endl;
-    //std::cout << (int)test.a << std::endl;
-
-    //return 0;
 
     int screenWidth = 1800;
     int screenHeight = 900;
@@ -78,8 +53,8 @@ int main() {
 
     SetTargetFPS(240);
 
-    Color* pixels = new Color[4032 * 3024];
-    for (int i = 0; i < 4032 * 3024; i++) {
+    Color* pixels = new Color[imgHeight * imgWidth];
+    for (int i = 0; i < imgHeight * imgWidth; i++) {
         pixels[i] = convertIntToColor(imageData[i]);
     }
 
@@ -87,8 +62,8 @@ int main() {
     
     Image img = {
         .data = pixels,
-        .width = 3024,
-        .height = 4032,
+        .width = imgWidth,
+        .height = imgHeight,
         .mipmaps = 1,
         .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
     };
@@ -106,9 +81,9 @@ int main() {
 
         ClearBackground(RAYWHITE);
 
-        //DrawTexture(texture, 0, 0, WHITE);
+        DrawTexture(texture, 0, 0, WHITE);
 
-        DrawTextureEx(texture, {0, 0}, 0.f, 0.25f, WHITE);
+        //DrawTextureEx(texture, {0, 0}, 0.f, 0.25f, WHITE);
 
         DrawFPS(10, 10);
 

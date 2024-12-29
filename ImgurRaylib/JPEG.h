@@ -2,6 +2,10 @@
 
 #include <string>
 
+#include "QuantTable.h"
+#include "HuffmanTable.h"
+#include "HuffmanTree.h"
+
 
 int getBytesAsInt(const std::string& data, int index, int bytes);
 
@@ -11,9 +15,6 @@ struct QTComponent {
     int quantID;
 };
 
-struct HTComponent {
-
-};
 
 class JPEG {
 private:
@@ -51,10 +52,17 @@ private:
     int componentCount;
     QTComponent components[3];
 
+    QuantTable qTables[2];
+    HuffmanTable hTables[2][2];
+
     std::string ECS;
+    float IDCT[8][8];
 
 public:
-    JPEG() {}
+    JPEG();
+
+    int getImageHeight() { return imageHeight; }
+    int getImageWidth() { return imageWidth; }
 
     void getHeaders(const std::string& data);
     void printHeaders();
@@ -68,7 +76,7 @@ public:
 
     void inverseDCT(int DCT[64], int output[64]);
 
-    void buildMCU(class BitStream& stream, class QuantTable& qTable, class HuffmanTree& hTreeDC, class HuffmanTree& hTreeAC, int& lastDcCoeff, int output[64]);
+    void buildMCU(class BitStream& stream, class QuantTable& qTable, class HuffmanTable& hTableDC, class HuffmanTable& hTableAC, int& lastDcCoeff, int output[64]);
 
     void decode(const std::string& data, int* output);
 };

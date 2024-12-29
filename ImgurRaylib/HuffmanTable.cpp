@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "HuffmanTree.h"
+
 HuffmanTable::HuffmanTable(const std::string& data, int startIndex) {
     int index = startIndex;
 
@@ -30,6 +32,48 @@ HuffmanTable::HuffmanTable(const std::string& data, int startIndex) {
         elements[i] = data[index + i];
     }
     index += elementCount;
+
+    hTree = new HuffmanTree(*this);
+}
+
+HuffmanTable::HuffmanTable(const HuffmanTable& other) {
+    length = other.length;
+    classType = other.classType;
+    tableID = other.tableID;
+
+    for (int i = 0; i < 16; i++) {
+        bitLengths[i] = other.bitLengths[i];
+    }
+
+    elementCount = other.elementCount;
+    elements = new unsigned char[elementCount];
+    for (int i = 0; i < elementCount; i++) {
+        elements[i] = other.elements[i];
+    }
+
+    hTree = new HuffmanTree(*this);
+}
+
+HuffmanTable& HuffmanTable::operator=(const HuffmanTable& other) {
+    length = other.length;
+    classType = other.classType;
+    tableID = other.tableID;
+
+    for (int i = 0; i < 16; i++) {
+        bitLengths[i] = other.bitLengths[i];
+    }
+
+    elementCount = other.elementCount;
+    delete[] elements;
+    elements = new unsigned char[elementCount];
+    for (int i = 0; i < elementCount; i++) {
+        elements[i] = other.elements[i];
+    }
+
+    delete hTree;
+    hTree = new HuffmanTree(*this);
+
+    return *this;
 }
 
 void HuffmanTable::print() {
@@ -49,4 +93,8 @@ void HuffmanTable::print() {
         std::cout << (int)elements[i] << ",";
     }
     std::cout << std::endl;
+}
+
+unsigned char HuffmanTable::getCodeFromStream(BitStream& stream) {
+    return hTree->getCodeFromStream(stream);
 }

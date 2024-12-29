@@ -8,6 +8,28 @@
 #include "HuffmanTree.h"
 #include "BitStream.h"
 
+
+static float normFactor(int n) {
+    if (n == 0) {
+        return sqrt(2) / 2;
+    }
+    else {
+        return 1;
+    }
+}
+
+
+JPEG::JPEG() {
+    float PI = acos(-1);
+
+    for (int x = 0; x < 8; x++) {
+        for (int u = 0; u < 8; u++) {
+            IDCT[x][u] = normFactor(u) * cos(((2 * x + 1) * u * PI) / 16);
+        }
+    }
+}
+
+
 int getBytesAsInt(const std::string& data, int index, int bytes) {
     if (bytes < 0 || bytes > 4) {
         std::cout << "Error: bytes must be between 0-4." << std::endl;
@@ -177,14 +199,16 @@ void JPEG::getDataSOF(const std::string& data) {
     index += 4;
 
     componentCount = getBytesAsInt(data, index, 1);
+    index++;
     for (int i = 0; i < componentCount; i++) {
-        int id = getBytesAsInt(data, 764 + (i * 3), 1);
-        int sampling = getBytesAsInt(data, 764 + (i * 3) + 1, 1);
-        int quantID = getBytesAsInt(data, 764 + (i * 3) + 2, 1);
+        int id = getBytesAsInt(data, index + (i * 3), 1);
+        int sampling = getBytesAsInt(data, index + (i * 3) + 1, 1);
+        int quantID = getBytesAsInt(data, index + (i * 3) + 2, 1);
 
         components[i] = { id, sampling, quantID };
     }
 }
+
 
 void JPEG::printImageInfo() {
     std::cout << "Image Height: " << imageHeight << std::endl;
@@ -248,7 +272,9 @@ void undoZigzag(const int input[64], int output[64]) {
 
     int index = 0;
     while (index < 64) {
-        output[index] = input[y * 8 + x];
+        output[y * 8 + x] = input[index];
+        //output[index] = input[y * 8 + x];
+
 
         switch (state) {
         case 0:
@@ -283,31 +309,16 @@ void undoZigzag(const int input[64], int output[64]) {
 
         index++;
     }
+
 }
 
-static float normFactor(int n) {
-    if (n == 0) {
-        return sqrt(2) / 2;
-    }
-    else {
-        return 1;
-    }
-}
+
 
 
 void JPEG::inverseDCT(int DCT[64], int output[64]) {
-    int matrixDCT[64];
+    int matrixDCT[64] = {0};
     undoZigzag(DCT, matrixDCT);
-
-    //std::cout << std::endl;
-    //for (int y = 0; y < 8; y++) {
-    //    for (int x = 0; x < 8; x++) {
-    //        std::cout << matrixDCT[y * 8 + x] << ' ';
-    //    }
-    //    std::cout << std::endl;
-    //}
     
-    float pi = acos(-1);
 
     for (int x = 0; x < 8; x++) {
         for (int y = 0; y < 8; y++) {
@@ -315,41 +326,30 @@ void JPEG::inverseDCT(int DCT[64], int output[64]) {
 
             for (int u = 0; u < 8; u++) {
                 for (int v = 0; v < 8; v++) {
-                    float normFactors = normFactor(u) * normFactor(v);
-                    float cosArgs = cos(((2 * x + 1) * u * pi) / 16) * cos(((2 * y + 1) * v * pi) / 16);
-                    sum += normFactors * (float)matrixDCT[v * 8 + u] * cosArgs;
+                    sum += (float)matrixDCT[v * 8 + u] * IDCT[x][u] * IDCT[y][v];
                 }
             }
 
             output[y * 8 + x] = round(sum / 4);
         }
     }
-
-    //std::cout << std::endl;
-    //for (int y = 0; y < 8; y++) {
-    //    for (int x = 0; x < 8; x++) {
-    //        std::cout << output[y * 8 + x] << ' ';
-    //    }
-    //    std::cout << std::endl;
-    //}
 }
 
-void JPEG::buildMCU(BitStream& stream, QuantTable& qTable, HuffmanTree& hTreeDC, HuffmanTree& hTreeAC, int& lastDcCoeff, int output[64]) {
+void JPEG::buildMCU(BitStream& stream, QuantTable& qTable, HuffmanTable& hTableDC, HuffmanTable& hTableAC, int& lastDcCoeff, int output[64]) {
     int DCT[64] = {0};
     
-    int size = hTreeDC.getCodeFromStream(stream);
+    int size = hTableDC.getCodeFromStream(stream);
     int bits = 0;
     if (size > 0) {
         bits = stream.getBits(size);
     }
 
-    int dcCoeff = decodeRLC(size, bits) + lastDcCoeff;
-    lastDcCoeff = dcCoeff;
+    lastDcCoeff += decodeRLC(size, bits);
 
-    DCT[0] = dcCoeff * qTable.table[0];
+    DCT[0] = lastDcCoeff * qTable.table[0];
 
     for (int i = 1; i < 64; i++) {
-        unsigned char byte = hTreeAC.getCodeFromStream(stream);
+        unsigned char byte = hTableAC.getCodeFromStream(stream);
         if (byte == 0x00) {
             break;
         }
@@ -364,7 +364,6 @@ void JPEG::buildMCU(BitStream& stream, QuantTable& qTable, HuffmanTree& hTreeDC,
         DCT[i] = acCoeff * qTable.table[i];
     }
 
-
     inverseDCT(DCT, output);
 }
 
@@ -372,7 +371,6 @@ int convertToRGBA(int Y, int Cb, int Cr) {
     float Bf = Cb * (2 - 2 * 0.114f) + Y;
     float Rf = Cr * (2 - 2 * 0.299f) + Y;
     float Gf = (Y - 0.114f * Bf - 0.299f * Rf) / 0.587f;
-
 
     int R = std::clamp((int)round(Rf + 128), 0, 255);
     int G = std::clamp((int)round(Gf + 128), 0, 255);
@@ -388,6 +386,19 @@ int convertToRGBA(int Y, int Cb, int Cr) {
 void JPEG::decode(const std::string& data, int* output) {
     int index = 0;
     for (int i = 0; i < headerCount; i++) {
+        if (headers[i] == DQT) {
+            QuantTable qt = QuantTable(data, headerPositions[i] + 2);
+            qTables[qt.tableID] = qt;
+            qt.print();
+            continue;
+        }
+        if (headers[i] == DHT) {
+            HuffmanTable ht = HuffmanTable(data, headerPositions[i] + 2);
+            hTables[ht.classType][ht.tableID] = ht;
+            ht.print();
+            continue;
+        }
+
         if (headers[i] == SOS) {
             index = headerPositions[i];
             break;
@@ -402,19 +413,6 @@ void JPEG::decode(const std::string& data, int* output) {
     //Define Huffman Table located at 868
     //Define Huffman Table located at 895
 
-    QuantTable qTableLum = QuantTable(data, 618);
-    QuantTable qTableChrome = QuantTable(data, 687);
-
-    HuffmanTable hTableLumDC = HuffmanTable(data, 775);
-    HuffmanTable hTableLumAC = HuffmanTable(data, 805);
-    HuffmanTable hTableChromeDC = HuffmanTable(data, 870);
-    HuffmanTable hTableChromeAC = HuffmanTable(data, 897);
-
-    HuffmanTree hTreeLumDC = HuffmanTree(hTableLumDC);
-    HuffmanTree hTreeLumAC = HuffmanTree(hTableLumAC);
-    HuffmanTree hTreeChromeDC = HuffmanTree(hTableChromeDC);
-    HuffmanTree hTreeChromeAC = HuffmanTree(hTableChromeAC);
-
     int marker = getBytesAsInt(data, index, 2);
     if (marker != 0xFFDA) {
         std::cout << "Error: Incorrect marker." << std::endl;
@@ -428,10 +426,7 @@ void JPEG::decode(const std::string& data, int* output) {
 
     parseImageData(data, index);
 
-    int lastLumDcCoeff0 = 0;
-    int lastLumDcCoeff1 = 0;
-    int lastLumDcCoeff2 = 0;
-    int lastLumDcCoeff3 = 0;
+    int lastLumDcCoeff = 0;
 
     int lastCbdDcCoeff = 0;
     int lastCrdDcCoeff = 0;
@@ -444,19 +439,20 @@ void JPEG::decode(const std::string& data, int* output) {
     int crdMat[64];
 
     int blockCount = imageHeight * imageWidth / 256;
+    //blockCount = imageHeight * imageWidth / 64;
     int blocksRead = 0;
 
     std::cout << std::endl;
 
     for (int blockY = 0; blockY < imageHeight / 16; blockY++) {
         for (int blockX = 0; blockX < imageWidth / 16; blockX++) {
-            buildMCU(stream, qTableLum, hTreeLumDC, hTreeLumAC, lastLumDcCoeff0, lumMat[0]);
-            buildMCU(stream, qTableLum, hTreeLumDC, hTreeLumAC, lastLumDcCoeff0, lumMat[1]);
-            buildMCU(stream, qTableLum, hTreeLumDC, hTreeLumAC, lastLumDcCoeff0, lumMat[2]);
-            buildMCU(stream, qTableLum, hTreeLumDC, hTreeLumAC, lastLumDcCoeff0, lumMat[3]);
+            buildMCU(stream, qTables[0], hTables[0][0], hTables[1][0], lastLumDcCoeff, lumMat[0]);
+            buildMCU(stream, qTables[0], hTables[0][0], hTables[1][0], lastLumDcCoeff, lumMat[1]);
+            buildMCU(stream, qTables[0], hTables[0][0], hTables[1][0], lastLumDcCoeff, lumMat[2]);
+            buildMCU(stream, qTables[0], hTables[0][0], hTables[1][0], lastLumDcCoeff, lumMat[3]);
 
-            buildMCU(stream, qTableChrome, hTreeChromeDC, hTreeChromeAC, lastCbdDcCoeff, cbdMat);
-            buildMCU(stream, qTableChrome, hTreeChromeDC, hTreeChromeAC, lastCrdDcCoeff, crdMat);
+            buildMCU(stream, qTables[1], hTables[0][1], hTables[1][1], lastCbdDcCoeff, cbdMat);
+            buildMCU(stream, qTables[1], hTables[0][1], hTables[1][1], lastCrdDcCoeff, crdMat);
 
 
             for (int y = 0; y < 16; y++) {
@@ -466,21 +462,9 @@ void JPEG::decode(const std::string& data, int* output) {
 
                     int lumMatIndex = (y / 8) * 2 + (x / 8);
 
-
                     output[imageY * imageWidth + imageX] = convertToRGBA(lumMat[lumMatIndex][(y % 8) * 8 + (x % 8)], cbdMat[(y / 2) * 8 + (x / 2)], crdMat[(y / 2) * 8 + (x / 2)]);
                 }
             }
-
-
-            //std::cout << lumMat[0][0] << ' ' << cbdMat[0] << ' ' << crdMat[0] << std::endl;
-            //for (int i = 0; i < 4; i++) {
-            //    int rgba = output[0];
-
-            //    std::cout << ((rgba >> 24 - (8 * i)) & 0xFF) << ' ';
-            //}
-            //std::cout << std::endl;
-
-            //return;
 
             blocksRead++;
             std::cout << '\r' << blocksRead << " / " << blockCount << " MCU blocks read" << std::flush;
@@ -490,9 +474,9 @@ void JPEG::decode(const std::string& data, int* output) {
 
     //for (int blockY = 0; blockY < imageHeight / 8; blockY++) {
     //    for (int blockX = 0; blockX < imageWidth / 8; blockX++) {
-    //        buildMCU(stream, qTableLum, hTreeLumDC, hTreeLumAC, lastLumDcCoeff, lumMat);
-    //        buildMCU(stream, qTableChrome, hTreeChromeDC, hTreeChromeAC, lastCrdDcCoeff, crdMat);
-    //        buildMCU(stream, qTableChrome, hTreeChromeDC, hTreeChromeAC, lastCbdDcCoeff, cbdMat);
+    //        buildMCU(stream, qTables[0], hTables[0][0], hTables[1][0], lastLumDcCoeff, lumMat[0]);
+    //        buildMCU(stream, qTables[1], hTables[0][1], hTables[1][1], lastCbdDcCoeff, cbdMat);
+    //        buildMCU(stream, qTables[1], hTables[0][1], hTables[1][1], lastCrdDcCoeff, crdMat);
 
 
     //        for (int y = 0; y < 8; y++) {
@@ -500,9 +484,12 @@ void JPEG::decode(const std::string& data, int* output) {
     //                int imageX = blockX * 8 + x;
     //                int imageY = blockY * 8 + y;
 
-    //                output[imageY * imageWidth + imageX] = convertToRGBA(lumMat[y * 8 + x], cbdMat[y * 8 + x], crdMat[y * 8 + x]);
+    //                output[imageY * imageWidth + imageX] = convertToRGBA(lumMat[0][y * 8 + x], cbdMat[y * 8 + x], crdMat[y * 8 + x]);
     //            }
     //        }
+
+    //        blocksRead++;
+    //        std::cout << '\r' << blocksRead << " / " << blockCount << " MCU blocks read" << std::flush;
     //    }
     //}
 }

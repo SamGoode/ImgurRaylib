@@ -3,16 +3,19 @@
 #include <string>
 
 class QuantTable {
-private:
+public:
     int length;
     int destination;
     int tableID;
 
-public:
     unsigned char table[64];
 
 public:
+    QuantTable() {}
     QuantTable(const std::string& data, int startIndex);
+    QuantTable(const QuantTable& other);
 
-    void print();    
+    QuantTable& operator=(const QuantTable& other);
+
+    void print();
 };
