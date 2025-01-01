@@ -438,14 +438,28 @@ void JPEG::decode(const std::string& data, int* output) {
     int cbdMat[64];
     int crdMat[64];
 
-    int blockCount = imageHeight * imageWidth / 256;
     //blockCount = imageHeight * imageWidth / 64;
+    int blocksY = imageHeight / 16;
+    int blocksX = imageWidth / 16;
+
+    if ((imageHeight % 16) != 0) {
+        blocksY++;
+    }
+
+    if ((imageWidth % 16) != 0) {
+        blocksX++;
+    }
+
+    int blockCount = blocksY * blocksX;
+    //int blockCount = imageHeight * imageWidth / 256;
     int blocksRead = 0;
 
     std::cout << std::endl;
 
-    for (int blockY = 0; blockY < imageHeight / 16; blockY++) {
-        for (int blockX = 0; blockX < imageWidth / 16; blockX++) {
+
+
+    for (int blockY = 0; blockY < blocksY; blockY++) {
+        for (int blockX = 0; blockX < blocksX; blockX++) {
             buildMCU(stream, qTables[0], hTables[0][0], hTables[1][0], lastLumDcCoeff, lumMat[0]);
             buildMCU(stream, qTables[0], hTables[0][0], hTables[1][0], lastLumDcCoeff, lumMat[1]);
             buildMCU(stream, qTables[0], hTables[0][0], hTables[1][0], lastLumDcCoeff, lumMat[2]);
@@ -459,6 +473,10 @@ void JPEG::decode(const std::string& data, int* output) {
                 for (int x = 0; x < 16; x++) {
                     int imageX = blockX * 16 + x;
                     int imageY = blockY * 16 + y;
+
+                    if (imageX >= imageWidth || imageY >= imageHeight) {
+                        continue;
+                    }
 
                     int lumMatIndex = (y / 8) * 2 + (x / 8);
 

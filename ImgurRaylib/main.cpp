@@ -81,9 +81,9 @@ int main() {
 
         ClearBackground(RAYWHITE);
 
-        DrawTexture(texture, 0, 0, WHITE);
+        //DrawTexture(texture, 0, 0, WHITE);
 
-        //DrawTextureEx(texture, {0, 0}, 0.f, 0.25f, WHITE);
+        DrawTextureEx(texture, {0, 0}, 0.f, 0.5f, WHITE);
 
         DrawFPS(10, 10);
 
