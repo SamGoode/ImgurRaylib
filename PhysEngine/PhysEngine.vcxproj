@@ -24,7 +24,7 @@
     <ProjectGuid>{dedd3aea-4c49-49a3-b0e8-75e87f272b9c}</ProjectGuid>
     <RootNamespace>ImgurRaylib</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>ImgurRaylib</ProjectName>
+    <ProjectName>PhysEngine</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
