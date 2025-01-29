@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34607.119
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImgurRaylib", "ImgurRaylib\ImgurRaylib.vcxproj", "{DEDD3AEA-4C49-49A3-B0E8-75E87F272B9C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PhysEngine", "PhysEngine\PhysEngine.vcxproj", "{DEDD3AEA-4C49-49A3-B0E8-75E87F272B9C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
